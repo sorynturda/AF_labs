@@ -188,7 +188,9 @@ int partition(int a[], int left, int right, const int n) {
 int partition_med(int a[], int left, int right, const int n) {
     Operation compQs = p.createOperation("Comparari quicksort", n);
     Operation atrQs = p.createOperation("Atribuiri quicksort", n);
-    int x = a[left + (right - left) / 2]; // pivot elementul din mijloc
+    int mid = left + ((right - left) >> 1);
+    int x = a[mid]; // pivot elementul din mijloc
+    std::swap(a[mid], a[right]);
     atrQs.count();
     int i = left - 1;
     for (int j = left; j <= right - 1; j++) {
