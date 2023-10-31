@@ -47,7 +47,7 @@ void print(node *first) {
     puts("");
 }
 
-node *merge(node *&List1, node *&List2) { // interclasare 2 liste
+node *merge(node *&List1, node *&List2) { //interclasare 2 liste
     if (List1 == NULL && List2 == NULL)
         return NULL;
     if (List1 == NULL)
