@@ -4,7 +4,7 @@
 * pe cazul mediu (un vector cu elementele in ordine arbitrara) quicksort este mai rapid decat heapsort
 *
 * bubble sort recursiv vs iterativ: ambii algoritmi efectueaza acelasi numar de operatii
-* din grafic rezulta ca bubble sort recursiv este putin mai rapid decat bubble sort iterativ
+* din grafic rezulta ca bubble sort interativ este putin mai rapid decat bubble sort recursiv
 */
 #include <stdio.h>
 #include <stdlib.h>
@@ -14,7 +14,7 @@
 
 #define MAX_SIZE 10000
 #define STEP_SIZE 100
-#define NR_TESTS 5
+#define NR_TESTS 100
 
 Profiler p("sortari nlogn");
 
@@ -74,7 +74,7 @@ void bubble_sort(int v[], int n) {
     }
 }
 
-void bubble_recursive_sort(int v[], int n, const int N) {
+void bubble_sort_recursiv(int v[], int n, const int N) {
     if (n == 1)
         return;
     Operation op = p.createOperation("Total bubble sort recursiv", N);
@@ -88,7 +88,7 @@ void bubble_recursive_sort(int v[], int n, const int N) {
         }
     }
     if (flag == true)
-        bubble_recursive_sort(v, n - 1, N);
+        bubble_sort_recursiv(v, n - 1, N);
 }
 
 void max_heapify(heap &A, int i) {
@@ -321,7 +321,7 @@ void perf_bubble(int order) {
         p.startTimer("bubble sort recursiv time", n);
         for (int test = 0; test < NR_TESTS; test++) {
             copy(a, v, n);
-            bubble_recursive_sort(a, n, n);
+            bubble_sort_recursiv(a, n, n);
         }
         p.stopTimer("bubble sort recursiv time", n);
 
@@ -331,7 +331,7 @@ void perf_bubble(int order) {
         }
         for (int test = 0; test < NR_TESTS; test++) {
             copy(a, v, n);
-            bubble_recursive_sort(a, n, n);
+            bubble_sort_recursiv(a, n, n);
         }
     }
     p.divideValues("Total bubble sort", NR_TESTS);
@@ -357,7 +357,7 @@ void perf_all() {
 int main() {
     clock_t begin = clock();
     // demo();
-    // perf_all();
+    perf_all();
     clock_t end = clock();
     printf("%lf\n", (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
