@@ -15,7 +15,7 @@
 
 #define MAX_SIZE  10000
 #define STEP_SIZE 100
-#define NR_TESTS 5
+#define NR_TESTS 50
 
 Profiler p("merge_lists");
 
@@ -29,10 +29,8 @@ struct heap {
     int n = MAX_SIZE;
     int heap_size;
 };
-void build_min_heap(heap &, const int);
-void build_min_heap_2(heap &, const int);
-void min_heapify(heap &, int, const int);
-void min_heapify_2(heap &, int, const int);
+void build_min_heap(heap &, const int, Operation);
+void min_heapify(heap &, int, const int, Operation);
 
 int parent(int i) {
     return (i - 1) >> 1; // vector indexat de la 0, relatiile sunt diferite
@@ -74,165 +72,65 @@ void add(node *& first, node *&last, int key) {
     }
 }
 
-node *merge_sorted_lists(node *lists[], const int k, const int N) {
+node *merge_sorted_lists(node *lists[], const int k, const int N, Operation op) {
     node *ptr = NULL;
     node *last = NULL;
     heap A;
     A.n = N;
-    Operation ops5 = p.createOperation("k=5", A.n);
-    Operation ops10 = p.createOperation("k=10", A.n);
-    Operation ops100 = p.createOperation("k=100", A.n);
     A.heap_size = k;
     for (int i = 0; i < k; i++)
         A.a[i] = lists[i];
-    build_min_heap(A, k);
+    build_min_heap(A, k, op);
 
     // puts("err");
     while (A.heap_size > 0) { // practic ar merge cand e un singur element in heap deoarece doar
         if (last != NULL) {    // din el pot fi celelalte noduri care sunt DEJA legate
             last->next = A.a[0];
-            switch (k) {
-            case 5: ops5.count();
-                break;
-            case 10: ops10.count();
-                break;
-            case 100: ops100.count();
-                break;
-            }
+            op.count();
         }
         else
             ptr = A.a[0];
-        switch (k) {
-        case 5: ops5.count();
-            break;
-        case 10: ops10.count();
-            break;
-        case 100: ops100.count();
-            break;
-        }
         last = A.a[0];
         A.a[0] = A.a[0]->next;
         if (A.a[0] == NULL) {
-            switch (k) {
-            case 5: ops5.count();
-                break;
-            case 10: ops10.count();
-                break;
-            case 100: ops100.count();
-                break;
-            }
+            op.count();
             A.heap_size--;
             A.a[0] = A.a[A.heap_size];
         }
         if (A.heap_size > 1)
-            min_heapify(A, 0, k);
+            min_heapify(A, 0, k, op);
     }
     return ptr;
 }
 
-node *merge_sorted_lists_2(node *lists[], const int k, const int N) {
-    node *ptr = NULL;
-    node *last = NULL;
-    heap A;
-    A.n = N;
-    Operation ops = p.createOperation("cazul 2 n-10000", k);
-    A.heap_size = k;
-    for (int i = 0; i < k; i++)
-        A.a[i] = lists[i];
-    build_min_heap_2(A, k);
-
-    while (A.heap_size > 0) { // practic ar merge cand e un singur element in heap deoarece doar
-        if (last != NULL) {    // din el pot fi celelalte noduri care sunt DEJA legate
-            last->next = A.a[0];
-            ops.count();
-        }
-        else
-            ptr = A.a[0];
-        ops.count();
-        last = A.a[0];
-        A.a[0] = A.a[0]->next;
-        if (A.a[0] == NULL) {
-            ops.count();
-            A.heap_size--;
-            A.a[0] = A.a[A.heap_size];
-        }
-        if (A.heap_size > 1)
-            min_heapify_2(A, 0, k);
-    }
-    return ptr;
-}
-
-void min_heapify(heap &A, int i, const int k) {
-    Operation ops5 = p.createOperation("k=5", A.n);
-    Operation ops10 = p.createOperation("k=10", A.n);
-    Operation ops100 = p.createOperation("k=100", A.n);
+void min_heapify(heap &A, int i, const int k, Operation op) {
     int l = left(i);
     int r = right(i);
     int smallest = i;
     if (l < A.heap_size) {
-        if (k == 5)
-            ops5.count();
-        else if (k == 10)
-            ops10.count();
-        else ops100.count();
+        op.count();
         if (A.a[l]->key < A.a[i]->key)
             smallest = l;
     }
     if (r < A.heap_size) {
-        if (k == 5)
-            ops5.count();
-        else if (k == 10)
-            ops10.count();
-        else ops100.count();
+        op.count();
         if (A.a[r]->key < A.a[smallest]->key)
             smallest = r;
     }
     if (smallest != i) {
-        if (k == 5)
-            ops5.count(3);
-        else if (k == 10)
-            ops10.count(3);
-        else ops100.count(3);
+        op.count();
         node *aux = A.a[i];
         A.a[i] = A.a[smallest];
         A.a[smallest] = aux;
-        min_heapify(A, smallest, k);
+        min_heapify(A, smallest, k, op);
     }
 }
 
-void min_heapify_2(heap &A, int i, const int k) {
-    Operation ops = p.createOperation("cazul 2 n-10000", k);
-    int l = left(i);
-    int r = right(i);
-    int smallest = i;
-    if (l < A.heap_size) {
-        ops.count();
-        if (A.a[l]->key < A.a[i]->key)
-            smallest = l;
-    }
-    if (r < A.heap_size) {
-        ops.count();
-        if (A.a[r]->key < A.a[smallest]->key)
-            smallest = r;
-    }
-    if (smallest != i) {
-        ops.count(3);
-        node *aux = A.a[i];
-        A.a[i] = A.a[smallest];
-        A.a[smallest] = aux;
-        min_heapify_2(A, smallest, k);
-    }
-}
-
-void build_min_heap(heap &A, const int k) {
+void build_min_heap(heap &A, const int k, Operation op) {
     for (int i = A.heap_size / 2 - 1; i >= 0; i--)
-        min_heapify(A, i, k);
+        min_heapify(A, i, k, op);
 }
 
-void build_min_heap_2(heap &A, const int k) {
-    for (int i = A.heap_size / 2 - 1; i >= 0; i--)
-        min_heapify_2(A, i, k);
-}
 
 void demo() {
     node *f1 = NULL, *l1 = NULL;
@@ -261,7 +159,9 @@ void demo() {
     node *L[] = {f1, f2, f3, f4};
     // printf("%d\n",f1->key);
     int k = sizeof(L) / sizeof(L[0]);
-    print(merge_sorted_lists(L, k, 0));
+    Operation op = p.createOperation("s", 0);
+    print(merge_sorted_lists(L, k, 0, op));
+    p.reset();
     // print(f2);
 }
 
@@ -298,11 +198,20 @@ void perf_1() {
     node * lists[100];
     int v[MAX_SIZE];
     for (int j = 0; j < k; j++)
-        for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE)
+        for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE) {
+            Operation op1 = p.createOperation("k=5", n);
+            Operation op2 = p.createOperation("k=10", n);
+            Operation op3 = p.createOperation("k=100", n);
             for (int test = 0; test < NR_TESTS; test++) {
                 generate_lists(lists, K[j], n);
-                ptr = merge_sorted_lists(lists, K[j], n);
+                if (j == 0)
+                    ptr = merge_sorted_lists(lists, K[j], n, op1);
+                if (j == 1)
+                    ptr = merge_sorted_lists(lists, K[j], n, op2);
+                if (j == 2)
+                    ptr = merge_sorted_lists(lists, K[j], n, op3);
             }
+        }
     // print(lists[0]);
     p.divideValues("k=5", NR_TESTS);
     p.divideValues("k=10", NR_TESTS);
@@ -314,12 +223,12 @@ void perf_1() {
 
 void perf_2() {
     const int NR_LISTS = 500;
-
     for (int k = 10; k <= NR_LISTS; k += 10) {
         for (int test = 0; test < NR_TESTS; test++) {
             node * lists[k];
+            Operation op = p.createOperation("cazul 2 n-10000", k);
             generate_lists(lists, k, MAX_SIZE);
-            node *ptr = merge_sorted_lists_2(lists, k, MAX_SIZE);
+            node *ptr = merge_sorted_lists(lists, k, MAX_SIZE, op);
         }
     }
     p.divideValues("cazul 2 n-10000", NR_TESTS);
@@ -336,8 +245,8 @@ void perf() {
 int main() {
     srand(time(NULL));
     clock_t begin = clock();
-    demo();
-    // perf();
+    // demo();
+    perf();
     clock_t end = clock();
     printf("%lf\n", (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
