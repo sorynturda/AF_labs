@@ -1,8 +1,12 @@
-#include <iostream>
+/*
+ * Sorin Turda, grupa 30222
+ * efortul de cautare a unui element fie ca exista sau nu
+ * creste odata cu factorul de umplere
+ * inserarea are O(1)
+ * cautarea depinde de factorul de umplere
+ */
 #include <stdio.h>
-#include <stdlib.h>
 #include <unordered_set>
-#include <limits.h>
 #include <time.h>
 #include <unistd.h>
 #include "../Profiler.h"
@@ -85,7 +89,7 @@ std::unordered_set<int> ia_elemente(Entry T[], int n) {
     std::unordered_set<int> res;
     while (k <= n) {
         int pos = rand() % N;
-        while (T[pos].id == 0)
+        while (T[pos].free == true)
             pos = rand() % N;
         if (res.find(T[pos].id) == res.end()) {
             res.insert(T[pos].id);
@@ -102,8 +106,9 @@ void perf() {
         Efort maxim negasite\n");
     int array[MAX_SIZE];
     double val[] = {0.8, 0.85, 0.9, 0.95, 0.99};
-    int nr_val = sizeof(val) / sizeof(val[0]);
+    int nr_val = sizeof(val) / sizeof(val[0]), last_n;
     data pt_csv[nr_val];
+    Entry last_T[N];
     for (int k = 0; k < nr_val; k++) {
         Entry T[N];
         int n = 0;
@@ -114,41 +119,74 @@ void perf() {
                 n++;
             α = 1.0 * n / N;
         }
-        std::unordered_set<int> s = ia_elemente(T, M / 2 - 1);
-        // print(T);
+        for (int test = 0; test < NR_TESTS; test++) {
+            std::unordered_set<int> s = ia_elemente(T, M / 2 - 1);
+            int tot = 0;
+            for (auto it : s) {
+                int accesari = 0;
+                hash_search(T, it, accesari);
+                pt_csv[k].efort_maxim_gasite = std::max(pt_csv[k].efort_maxim_gasite, accesari);
+                tot += accesari;
+            }
+            pt_csv[k].efort_mediu_gasite += (double)tot / 1500;
+            int v[M / 2 - 1];
+            tot = 0;
+            FillRandomArray(v, M / 2 - 1, MAX_SIZE + 1, MAX_SIZE * 2, true, UNSORTED);
+            for (int jj = 0; jj < M / 2 - 1; jj++) {
+                int accesari = 0;
+                hash_search(T, v[jj], accesari);
+                pt_csv[k].efort_maxim_negasite = std::max(pt_csv[k].efort_maxim_negasite, accesari);
+                tot += accesari;
+            }
+            pt_csv[k].efort_mediu_negasite += (double) tot / 1500;
+        }
+        if (k == nr_val - 1) {
+            last_n = n;
+            for (int i = 0; i < N; i++)
+                last_T[i] = T[i];
+        }
+    }
+    for (int i = 0; i < nr_val; i++) {
+        fprintf(f, "%0.2lf,%lf,%d,%lf,%d\n", val[i], pt_csv[i].efort_mediu_gasite / NR_TESTS,
+                pt_csv[i].efort_maxim_gasite,
+                pt_csv[i].efort_mediu_negasite / NR_TESTS,
+                pt_csv[i].efort_maxim_negasite);
+    }
+    double α = 0.99;
+    int ac = 0;
+    data sters;
+    while (α > 0.8) {
+        int pos = rand() % N;
+        if (last_T[pos].free == false) {
+            hash_delete(last_T, last_T[pos].id, ac);
+            last_n--;
+        }
+        α = 1.0 * last_n / N;
+    }
+    for (int test = 0; test < NR_TESTS; test++) {
+        std::unordered_set<int> s = ia_elemente(last_T, M / 2 - 1);
         int tot = 0;
         for (auto it : s) {
             int accesari = 0;
-            hash_search(T, it, accesari);
-            pt_csv[k].efort_maxim_gasite = std::max(pt_csv[k].efort_maxim_gasite, accesari);
+            hash_search(last_T, it, accesari);
+            sters.efort_maxim_gasite = std::max(sters.efort_maxim_gasite, accesari);
             tot += accesari;
         }
-        pt_csv[k].efort_mediu_gasite = (double)tot / 1500;
+        sters.efort_mediu_gasite += (double)tot / 1500;
         int v[M / 2 - 1];
         tot = 0;
         FillRandomArray(v, M / 2 - 1, MAX_SIZE + 1, MAX_SIZE * 2, true, UNSORTED);
         for (int jj = 0; jj < M / 2 - 1; jj++) {
             int accesari = 0;
-            hash_search(T, v[jj], accesari);
-            pt_csv[k].efort_maxim_negasite = std::max(pt_csv[k].efort_maxim_negasite, accesari);
+            hash_search(last_T, v[jj], accesari);
+            sters.efort_maxim_negasite = std::max(sters.efort_maxim_negasite, accesari);
             tot += accesari;
         }
-        pt_csv[k].efort_mediu_negasite = (double) tot / 1500;
-        // std::cout << s.size() << '\n';
-        printf("α = %.2lf\n", α);
+        sters.efort_mediu_negasite += (double) tot / 1500;
     }
-    for (int i = 0; i < nr_val; i++) {
-        fprintf(f, "%0.2lf,%lf,%d,%lf,%d\n", val[i], pt_csv[i].efort_mediu_gasite,
-                pt_csv[i].efort_maxim_gasite, pt_csv[i].efort_mediu_negasite,
-                pt_csv[i].efort_maxim_negasite);
-    }
-    // printf("gasite: %d\naccesate: %d\nmaxim %d\n", gasite, op.celule_accesate, cel);
-    // int key = rand() % (MAX_SIZE + 1);
-    // int q = hash_search(T, key, op);
-    // if (q != -1)
-    //     printf("%d, op = %d\n", T[q].id, op.celule_accesate);
-    // else
-    //     printf("%d nu exista in tabela\n", key);
+    fprintf(f, "stergere %.02lf,%lf,%d,%lf,%d\n", α, sters.efort_mediu_gasite / NR_TESTS,
+            sters.efort_maxim_gasite, sters.efort_mediu_negasite / NR_TESTS,
+            sters.efort_maxim_negasite);
     fclose(f);
 }
 
