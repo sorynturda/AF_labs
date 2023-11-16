@@ -1,0 +1,3 @@
+prima cu vector de tati
+a doua cu vectori de copii
+a treia: primu copil e nodu din stg
