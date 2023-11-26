@@ -7,12 +7,14 @@ struct NodeT {
     int size;
     NodeT *left;
     NodeT *right;
+    NodeT *p;
 };
 
 NodeT *create(int key) {
     NodeT *p = new NodeT;
     p->left = nullptr;
     p->right = nullptr;
+    p->p = nullptr;
     p->key = key;
     p->size = 0;
     return p;
@@ -43,7 +45,7 @@ NodeT *find_min(NodeT *x) {
     return x;
 }
 
-NodeT *find(NodeT *x, int key) {
+NodeT *find(NodeT *&x, int key) {
     if (x == NULL || x->key == key)
         return x;
     if (x->key > key)
@@ -51,41 +53,21 @@ NodeT *find(NodeT *x, int key) {
     return find(x->right, key);
 }
 
-NodeT *succesor(NodeT *x, NodeT *root) {
-    if (x->right)
-        return find_min(x->right);
-    NodeT *p = root, *q = nullptr;
-    while (p != x) {
-        if (x->key > p->key)
-            p = p->right;
-        else {
-            q = p;
-            p = p->left;
-        }
-    }
-    if (q == nullptr)
-        return p;
-    return q;
-}
-
-NodeT *function(int left, int right) {
+NodeT *build_tree(NodeT *&y, int left, int right) {
     if (left > right)
         return nullptr;
     int mid = left + (right - left) / 2;
     NodeT *x = create(mid);
-    x->left = function(left, mid - 1);
-    x->right = function(mid + 1, right);
+    x->left = build_tree(x, left, mid - 1);
+    x->right = build_tree(x, mid + 1, right);
+    x->p = y;
     x->size = right - left + 1;
     return x;
 
 }
 
-NodeT *build_tree(int n) {
-    NodeT *root = function(1, n);
-    return root;
-}
 
-NodeT *os_select(NodeT *x, int i) {
+NodeT *os_select(NodeT *&x, int i) {
     int r = x->left ? x->left->size + 1 : 1;
     if (i == r)
         return x;
@@ -94,15 +76,65 @@ NodeT *os_select(NodeT *x, int i) {
     return os_select(x->right, i - r);
 }
 
+void transplant(NodeT *&root, NodeT *&u, NodeT *&v) {
+    if (u->p == nullptr) 
+        root = v;
+    else {
+        if (u == u->p->left)
+            u->p->left = v;
+        else
+            u->p->right = v;
+    }
+    if (v)
+        v->p = u->p;
+}
+
+void update(NodeT *&x) {
+    if (!x)
+        return;
+    update(x->p);
+    x->size--;
+}
+
+void os_delete(NodeT *&root, NodeT *&x) {
+    if (!x->left) {
+        update(x);
+        transplant(root, x, x->right);
+    }
+    else {
+        if (!x->right) {
+            update(x);
+            transplant(root, x, x->left);
+        }
+        else {
+            NodeT *y = find_min(x->right);
+            update(y);
+            if (y != x->right) {
+                transplant(root, y, y->right);
+                y->right = x->right;
+                y->right->p = y;
+            }
+            transplant(root, x, y);
+            y->left = x->left;
+            y->left->p = y;
+        }
+    }
+    root->size = root->left->size + root->right->size + 1;
+}
+
 void demo() {
     NodeT *root = nullptr;
     int n = 11;
-    root = build_tree(n);
+    root = build_tree(root, 1, n);
     pp(root, 0);
-    std::cout << succesor(find(root, 4), root)->key << '\n';
+    NodeT *x =  os_select(root, 3);
+    os_delete(root, x);
+    pp(root, 0);
+    // os_delete(root, x);
+    // pp(root, 0);
     // for (int i = 0; i < n; i++)
-    //     std::cout << os_select(root, 1 + i)->key << '\n';
-
+    //     if (os_select(root, i + 1)->p)
+    //         std::cout << i + 1 << ": " << os_select(root, 1 + i)->p->key << '\n';
 }
 
 int main() {
