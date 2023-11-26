@@ -77,7 +77,7 @@ NodeT *os_select(NodeT *&x, int i) {
 }
 
 void transplant(NodeT *&root, NodeT *&u, NodeT *&v) {
-    if (u->p == nullptr) 
+    if (u->p == nullptr)
         root = v;
     else {
         if (u == u->p->left)
@@ -90,25 +90,26 @@ void transplant(NodeT *&root, NodeT *&u, NodeT *&v) {
 }
 
 void update(NodeT *&x) {
-    if (!x)
+    if (x == nullptr)
         return;
     update(x->p);
     x->size--;
 }
 
 void os_delete(NodeT *&root, NodeT *&x) {
+    update(x);
     if (!x->left) {
-        update(x);
         transplant(root, x, x->right);
+        x->size = x->right->size - 1;
     }
     else {
         if (!x->right) {
-            update(x);
             transplant(root, x, x->left);
+            x->size = x->left->size - 1;
         }
         else {
             NodeT *y = find_min(x->right);
-            update(y);
+            y->size = x->size;
             if (y != x->right) {
                 transplant(root, y, y->right);
                 y->right = x->right;
@@ -119,7 +120,7 @@ void os_delete(NodeT *&root, NodeT *&x) {
             y->left->p = y;
         }
     }
-    root->size = root->left->size + root->right->size + 1;
+    // root->size = root->left->size + root->right->size + 1;
 }
 
 void demo() {
@@ -127,7 +128,7 @@ void demo() {
     int n = 11;
     root = build_tree(root, 1, n);
     pp(root, 0);
-    NodeT *x =  os_select(root, 3);
+    NodeT *x =  os_select(root, 10);
     os_delete(root, x);
     pp(root, 0);
     // os_delete(root, x);
