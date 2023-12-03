@@ -70,6 +70,60 @@ void inorder_iterativ(NodeT *x) {
     }
 }
 
+void insertion_sort(int a[], int n) {
+    for (int i = 1; i < n; i++) {
+        int x = a[i];
+        // opAttr.count();
+        int j = i - 1;
+        while (j >= 0 && a[j] > x) {
+            a[j + 1] = a[j];
+            j--;
+        }
+        // opAttr.count();
+        a[j + 1] = x;
+    }
+}
+
+int partition(int a[], int left, int right) {
+    int x = a[right]; // pivot elementul cel mai din dreapta
+    // atrQs.count();
+    int i = left - 1;
+    for (int j = left; j <= right - 1; j++) {
+        // compQs.count();
+        if (a[j] <= x) {
+            i++;
+            // atrQs.count(3);
+            std::swap(a[i], a[j]);
+        }
+    }
+    // atrQs.count();
+    std::swap(a[i + 1], a[right]); // punem pivotul la locul lui
+    return i + 1; // pozitia unde e amplasat pivotul
+}
+
+
+void quicksort(int a[], int left, int right) {
+    if (left >= right)
+        return;
+    if (right - left + 1 <= 30) {
+        insertion_sort(a + left, right - left + 1);
+        return;
+    }
+    int q = partition(a, left, right);
+    quicksort(a, left, q - 1);
+    quicksort(a, q + 1, right);
+}
+
+void perf() {
+    int n = 10;
+    int a[n];
+    FillRandomArray(a, n);
+    quicksort(a, 0, n - 1);
+    for (int i = 0; i < n; i++)
+        printf("%d ", a[i]);
+    puts("");
+}
+
 void demo() {
     NodeT *root = nullptr;
     int n = 10;
@@ -85,6 +139,7 @@ void demo() {
 
 int main() {
     srand(time(nullptr));
-    demo();
+    // demo();
+    perf();
     return 0;
 }
