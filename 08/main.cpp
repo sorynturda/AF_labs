@@ -33,6 +33,11 @@ void copy(int a[NR_TESTS][MAX_SIZE], int b[NR_TESTS][MAX_SIZE], int n) {
             a[i][j] = b[i][j];
 }
 
+void copy(int *a, int *b, int n) {
+    for (int i = 0; i < n; i++)
+        a[i] = b[i];
+}
+
 void insert(NodeT *&x, int key, NodeT *parent) {
     if (x == nullptr) {
         x = create(key);
@@ -142,10 +147,6 @@ int partition(int a[], int left, int right) {
 void quicksort(int a[], int left, int right, Operation ops) {
     if (left >= right)
         return;
-    if (right - left + 1 <= 30) {
-        insertion_sort(a + left, right - left + 1, ops);
-        return;
-    }
     int q = partition(a, left, right, ops);
     quicksort(a, left, q - 1, ops);
     quicksort(a, q + 1, right, ops);
@@ -154,16 +155,36 @@ void quicksort(int a[], int left, int right, Operation ops) {
 void quicksort(int a[], int left, int right) {
     if (left >= right)
         return;
-    if (right - left + 1 <= 30) {
-        insertion_sort(a + left, right - left + 1);
-        return;
-    }
     int q = partition(a, left, right);
     quicksort(a, left, q - 1);
     quicksort(a, q + 1, right);
 }
 
-void quicksort(int a[], int left, int right, int size) {
+void quicksort_h(int a[], int left, int right, Operation ops) {
+    if (left >= right)
+        return;
+    if (right - left + 1 <= 30) {
+        insertion_sort(a + left, right - left + 1, ops);
+        return;
+    }
+    int q = partition(a, left, right, ops);
+    quicksort_h(a, left, q - 1, ops);
+    quicksort_h(a, q + 1, right, ops);
+}
+
+void quicksort_h(int a[], int left, int right) {
+    if (left >= right)
+        return;
+    if (right - left + 1 <= 30) {
+        insertion_sort(a + left, right - left + 1);
+        return;
+    }
+    int q = partition(a, left, right);
+    quicksort_h(a, left, q - 1);
+    quicksort_h(a, q + 1, right);
+}
+
+void quicksort_h(int a[], int left, int right, int size) {
     if (left >= right)
         return;
     if (right - left + 1 <= size) {
@@ -171,8 +192,8 @@ void quicksort(int a[], int left, int right, int size) {
         return;
     }
     int q = partition(a, left, right);
-    quicksort(a, left, q - 1, size);
-    quicksort(a, q + 1, right, size);
+    quicksort_h(a, left, q - 1, size);
+    quicksort_h(a, q + 1, right, size);
 }
 
 void perf_1() {
@@ -201,28 +222,47 @@ void perf_2() {
             FillRandomArray(v[test], n);
         copy(a, v , n);
         for (int test = 0; test < NR_TESTS; test++) {
-            Operation ops = P.createOperation("operatii-quicksort", n);
-            quicksort(v[test], 0, n - 1, ops);
+            Operation ops = P.createOperation("operatii-quicksort_h", n);
+            quicksort_h(a[test], 0, n - 1, ops);
         }
+        copy(a, v , n);
+        for (int test = 0; test < NR_TESTS; test++) {
+            Operation ops = P.createOperation("operatii-quicksort", n);
+            quicksort(a[test], 0, n - 1, ops);
+        }
+        copy(a, v , n);
+        P.startTimer("timp-quicksort_h", n);
+        for (int test = 0; test < 200; test++) {
+            copy(a[0], v[0], n);
+            quicksort_h(a[0], 0, n - 1);
+        }
+        P.stopTimer("timp-quicksort_h", n);
+        copy(a, v , n);
         P.startTimer("timp-quicksort", n);
-        for (int test = 0; test < NR_TESTS; test++)
-            quicksort(a[test], 0, n - 1);
+        for (int test = 0; test < 200; test++) {
+            copy(a[0], v[0], n);
+            quicksort(a[0], 0, n - 1);
+        }
         P.stopTimer("timp-quicksort", n);
     }
+    P.divideValues("operatii-quicksort_h", NR_TESTS);
     P.divideValues("operatii-quicksort", NR_TESTS);
-    P.divideValues("timp-quicksort", NR_TESTS);
+    P.createGroup("operatii", "operatii-quicksort", "operatii-quicksort_h");
+    P.createGroup("timp", "timp-quicksort", "timp-quicksort_h");
 }
 
 void perf_3() {
-    const int N = 50;
-    int v[N][MAX_SIZE], a[N][MAX_SIZE];
-    for (int i = 0; i < N; i++)
-        FillRandomArray(v[i], MAX_SIZE);
-    for (int i = 0; i <= 30; i++) {
-        copy(a, v, MAX_SIZE);
+    const int N = 1000;
+    // int v[N][MAX_SIZE], a[N][MAX_SIZE];
+    int a[MAX_SIZE];
+    // for (int i = 0; i < N; i++)
+    //     FillRandomArray(v[i], MAX_SIZE);
+    for (int i = 0; i <= 1000; i++) {
+        // copy(a, v, MAX_SIZE);
         P.startTimer("functie", i);
         for (int test = 0; test < N; test++) {
-            quicksort(a[test], 0, MAX_SIZE - 1, i);
+            FillRandomArray(a, MAX_SIZE);
+            quicksort_h(a, 0, MAX_SIZE - 1, i);
         }
         P.stopTimer("functie", i);
     }
@@ -233,9 +273,9 @@ void perf() {
     // P.reset("arbore");
     // perf_1();
     // P.showReport();
-    // P.reset("quicksort");
+    // P.reset("quicksort_h");
     // perf_2();
-    P.reset("quicksort-optim");
+    P.reset("quicksort_h-optim");
     perf_3();
     P.showReport();
 }
@@ -260,7 +300,7 @@ void demo_quick() {
     FillRandomArray(v, n);
     for (int i = 0; i < n; i++)
         printf("%d ", v[i]);
-    quicksort(v, 0, n - 1);
+    quicksort_h(v, 0, n - 1);
     puts("");
     for (int i = 0; i < n; i++)
         printf("%d ", v[i]);
