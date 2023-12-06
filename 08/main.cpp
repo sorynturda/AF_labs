@@ -1,3 +1,10 @@
+/*
+ * Sorin Turda 30222
+ * parcurgerea iterativa si parcurgerea recursiva au fiecare complexitatea O(n)
+ * quicksort hibridizat conform graficelor e mai rapid decat cel normal
+ * pragul optim pentru quicksort hibridizat e intre 7-15 conform graficului
+ */
+
 #include <iostream>
 #include <stdio.h>
 #include <string.h>
@@ -63,7 +70,6 @@ void inorder_iterativ(NodeT *x, Operation ops) {
     if (!x)
         return;
     NodeT *temp, *curr = x, *pre;
-
     while (curr != nullptr) {
         if (curr->left == nullptr) {
             // printf("%d ", curr->key);
@@ -116,7 +122,7 @@ void insertion_sort(int a[], int n) {
 
 int partition(int a[], int left, int right, Operation ops) {
     int x = a[right]; // pivot elementul cel mai din dreapta
-    ops.count();
+    // ops.count();
     int i = left - 1;
     for (int j = left; j <= right - 1; j++) {
         ops.count();
@@ -126,7 +132,7 @@ int partition(int a[], int left, int right, Operation ops) {
             std::swap(a[i], a[j]);
         }
     }
-    ops.count();
+    ops.count(3);
     std::swap(a[i + 1], a[right]); // punem pivotul la locul lui
     return i + 1; // pozitia unde e amplasat pivotul
 }
@@ -196,6 +202,19 @@ void quicksort_h(int a[], int left, int right, int size) {
     quicksort_h(a, q + 1, right, size);
 }
 
+void quicksort_h(int a[], int left, int right, int size, Operation ops) {
+    if (left >= right)
+        return;
+    ops.count();
+    if (right - left + 1 <= size) {
+        insertion_sort(a + left, right - left + 1, ops);
+        return;
+    }
+    int q = partition(a, left, right, ops);
+    quicksort_h(a, left, q - 1, size, ops);
+    quicksort_h(a, q + 1, right, size, ops);
+}
+
 void perf_1() {
     int v[MAX_SIZE];
     for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE)
@@ -252,13 +271,14 @@ void perf_2() {
 }
 
 void perf_3() {
-    const int N = 1000;
-    // int v[N][MAX_SIZE], a[N][MAX_SIZE];
-    int a[MAX_SIZE];
-    // for (int i = 0; i < N; i++)
-    //     FillRandomArray(v[i], MAX_SIZE);
-    for (int i = 0; i <= 1000; i++) {
-        // copy(a, v, MAX_SIZE);
+    const int N = 100;
+    int a[MAX_SIZE], v[MAX_SIZE];
+    for (int i = 0; i <= 100; i++) {
+        for (int test = 0; test < N; test++) {
+            FillRandomArray(a, MAX_SIZE);
+            Operation ops = P.createOperation("operatii", i);
+            quicksort_h(a, 0, MAX_SIZE - 1, i, ops);
+        }
         P.startTimer("functie", i);
         for (int test = 0; test < N; test++) {
             FillRandomArray(a, MAX_SIZE);
@@ -266,7 +286,7 @@ void perf_3() {
         }
         P.stopTimer("functie", i);
     }
-    P.divideValues("functie", N);
+    P.divideValues("operatii", N);
 }
 
 void perf() {
