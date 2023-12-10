@@ -1,6 +1,11 @@
+/*
+ * Sorin Turda, grupa 30222
+ * Algoritmul lui kruskal are complexitate O(E * log E), E fiind numarul de muchii
+ * find-set are complexitatea O(1)
+ * make-set are complexitatea O(1)
+ * toate operatiile pe multimi disjuncte au complexitatea O(m + n*lg (n)), m operatii si n multimi
+ */
 #include <iostream>
-#include <stdio.h>
-#include <string.h>
 #include <time.h>
 #include <set>
 #include "../Profiler.h"
@@ -9,7 +14,7 @@
 #define STEP_SIZE 100
 #define NR_TESTS 5
 
-Profiler P("kruskal");
+Profiler p("kruskal");
 
 struct NodeT {
     int key;
@@ -25,17 +30,13 @@ struct edge {
 
 int partition(edge a[], int left, int right) {
     edge x = a[right];
-    // ops.count();
     int i = left - 1;
     for (int j = left; j <= right - 1; j++) {
-        // ops.count();
         if (a[j].w <= x.w) {
             i++;
-            // ops.count(3);
             std::swap(a[i], a[j]);
         }
     }
-    // ops.count();
     std::swap(a[i + 1], a[right]);
     return i + 1;
 }
@@ -65,6 +66,7 @@ NodeT *find_set(NodeT *&x) {
 void link(NodeT *&x, NodeT *&y) {
     if (x->rank > y->rank)
         y->parent = x;
+
     else {
         x->parent = y;
         if (x->rank == y->rank)
@@ -78,7 +80,45 @@ void unionn(NodeT *&x, NodeT *&y) {
     link(set1, set2);
 }
 
-edge *kruskal(edge edges[], int n, int m, Operation ops) {
+NodeT *make_set(int key, Operation ops) {
+    NodeT *x = new NodeT;
+    ops.count(3);
+    x->key = key;
+    x->parent = x;
+    x->rank = 0;
+    return x;
+}
+
+NodeT *find_set(NodeT *&x, Operation ops) {
+    if (x != x->parent) {
+        ops.count();
+        x->parent = find_set(x->parent);
+    }
+    return x->parent;
+}
+
+void link(NodeT *&x, NodeT *&y, Operation ops) {
+    if (x->rank > y->rank) {
+        ops.count();
+        y->parent = x;
+    }
+    else {
+        ops.count(2);
+        x->parent = y;
+        if (x->rank == y->rank) {
+            ops.count();
+            y->rank++;
+        }
+    }
+}
+
+void unionn(NodeT *&x, NodeT *&y, Operation ops) {
+    NodeT *set1 = find_set(x);
+    NodeT *set2 = find_set(y);
+    link(set1, set2, ops);
+}
+
+edge *kruskal(edge edges[], int n, int m) {
     int count = 0;
     NodeT *set[n];
     edge *res = (edge*)malloc((n - 1) * sizeof(edge));
@@ -94,7 +134,23 @@ edge *kruskal(edge edges[], int n, int m, Operation ops) {
     return res;
 }
 
-void fa_arbore(edge edges[], int n, int &m) {
+edge *kruskal(edge edges[], int n, int m, Operation ops) {
+    int count = 0;
+    NodeT *set[n];
+    edge *res = (edge*)malloc((n - 1) * sizeof(edge));
+    for (int i = 0; i < n; i++)
+        set[i] = make_set(i, ops);
+    quicksort(edges, 0, m - 1);
+    for (int i = 0; i < m; i++) {
+        if (find_set(set[edges[i].u], ops) != find_set(set[edges[i].v], ops)) {
+            res[count++] = edges[i];
+            unionn(set[edges[i].u], set[edges[i].v], ops);
+        }
+    }
+    return res;
+}
+
+void fa_graf_conex(edge edges[], int n, int &m) {
     NodeT *s[n];
     for (int i = 0; i < n; i++)
         s[i] = make_set(i);
@@ -104,7 +160,6 @@ void fa_arbore(edge edges[], int n, int &m) {
     }
     std::set<int>S;
     for (int i = 0; i < n; i++) {
-        // std::cout << find_set(s[i])->key << ' ';
         S.insert(find_set(s[i])->key);
     }
     m = m + S.size() - 1;
@@ -168,10 +223,6 @@ void demo_kruskal() {
         {0, 1, 8}, {1, 2, 7}, {0, 2, 1}, {0, 3, 5},
         {0, 2, 9}, {2, 3, 5}, {1, 3, 4}, {1, 3, 7}
     };
-    // quicksort(edges,0,15);
-    // for (int i = 0; i < m; i++)
-    //     printf("%d %d %d\n", edges[i].u, edges[i].v, edges[i].w);
-    // puts("");
     edge *res = kruskal(edges, n, m);
     for (int i = 0; i < n - 1; i++)
         printf("%d - %d: %d\n", res[i].u, res[i].v, res[i].w);
@@ -180,26 +231,29 @@ void demo_kruskal() {
 void perf() {
     edge edges[MAX_SIZE * 4];
     for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE) {
-        for (int u = 0; u < n; u++) {
-            edges[i] = get_edge(u, n);
+        for (int test = 0; test < NR_TESTS; test++) {
+            for (int u = 0; u < n; u++) {
+                edges[u] = get_edge(u, n);
+            }
+            int m = n;
+            fa_graf_conex(edges, n, m);
+            for (int i = m; i < n * 4; i++)
+                edges[i] = get_edge(n);
+            m = n * 4;
+            Operation ops = p.createOperation("kruskal", n);
+            kruskal(edges, n, m, ops);
         }
-        int m = n;
-        fa_arbore(edges, n, m);
-        for (int i = m; i < n * 4; i++)
-            edges[i].get_edge(n);
-        m = n * 4;
-        Operation ops = p.createOperation("operatii", n);
-        kruskal(edges, n, m, ops);
     }
+    p.divideValues("kruskal", NR_TESTS);
     p.showReport();
 }
 
 int main() {
     srand(time(nullptr));
     clock_t begin = clock();
-    // demo();
-    // demo_kruskal();
-    perf();
+    demo();
+    demo_kruskal();
+    // perf();
     clock_t end = clock();
     printf("%lf\n", (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
