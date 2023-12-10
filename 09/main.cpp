@@ -9,6 +9,8 @@
 #define STEP_SIZE 100
 #define NR_TESTS 5
 
+Profiler P("kruskal");
+
 struct NodeT {
     int key;
     int rank;
@@ -76,7 +78,7 @@ void unionn(NodeT *&x, NodeT *&y) {
     link(set1, set2);
 }
 
-edge *kruskal(edge edges[], int n, int &m) {
+edge *kruskal(edge edges[], int n, int m, Operation ops) {
     int count = 0;
     NodeT *set[n];
     edge *res = (edge*)malloc((n - 1) * sizeof(edge));
@@ -89,15 +91,35 @@ edge *kruskal(edge edges[], int n, int &m) {
             unionn(set[edges[i].u], set[edges[i].v]);
         }
     }
-    // if (m == n) {
-    //     std::set<int>S;
-    //     for (int i = 0; i < n; i++)
-    //         S.insert(find_set(set[i])->key);
-    //     for (int i = 0; i < n; i++)
-    //         std::cout << find_set(set[i])->key << ' ';
-    //     m = S.size();
-    // }
     return res;
+}
+
+void fa_arbore(edge edges[], int n, int &m) {
+    NodeT *s[n];
+    for (int i = 0; i < n; i++)
+        s[i] = make_set(i);
+    for (int i = 0; i < m; i++) {
+        if (find_set(s[edges[i].u]) != find_set(s[edges[i].v]))
+            unionn(s[edges[i].u], s[edges[i].v]);
+    }
+    std::set<int>S;
+    for (int i = 0; i < n; i++) {
+        // std::cout << find_set(s[i])->key << ' ';
+        S.insert(find_set(s[i])->key);
+    }
+    m = m + S.size() - 1;
+    for (int i = n; i < m; i++) {
+        int u = *S.begin();
+        S.erase(u);
+        int v = *S.begin();
+        unionn(s[u], s[v]);
+        edges[i].u = u;
+        edges[i].v = v;
+        edges[i].w = rand() % MAX_SIZE + 1;
+        S.clear();
+        for (int i = 0; i < n; i++)
+            S.insert(find_set(s[i])->key);
+    }
 }
 
 edge get_edge(int u, int n) {
@@ -107,7 +129,17 @@ edge get_edge(int u, int n) {
     while (v == u)
         v = rand() % n;
     res.v = v;
-    res.w = rand() % MAX_SIZE;
+    res.w = rand() % MAX_SIZE + 1;
+    return res;
+}
+
+edge get_edge(int n) {
+    edge res;
+    res.u = rand() % n;
+    res.v = rand() % n;
+    while (res.u == res.v)
+        res.v = rand() % n;
+    res.w = rand() % MAX_SIZE + 1;
     return res;
 }
 
@@ -146,17 +178,20 @@ void demo_kruskal() {
 }
 
 void perf() {
-    edge edges[100];
-    // for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE) {
-    //     for (int u = 0; u < n; u++) {
-    //         edges[i] = get_edge(u, n);
-    //     }
-    // }
-    int m = 100;
-    for (int u = 0; u < 100; u++)
-        edges[u] = get_edge(u, 100);
-    edge *res = kruskal(edges, 100, m);
-    std::cout << '\n' << m << '\n';
+    edge edges[MAX_SIZE * 4];
+    for (int n = STEP_SIZE; n <= MAX_SIZE; n += STEP_SIZE) {
+        for (int u = 0; u < n; u++) {
+            edges[i] = get_edge(u, n);
+        }
+        int m = n;
+        fa_arbore(edges, n, m);
+        for (int i = m; i < n * 4; i++)
+            edges[i].get_edge(n);
+        m = n * 4;
+        Operation ops = p.createOperation("operatii", n);
+        kruskal(edges, n, m, ops);
+    }
+    p.showReport();
 }
 
 int main() {
