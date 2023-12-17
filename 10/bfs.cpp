@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <queue>
+#include <set>
 #include "bfs.h"
 
 int get_neighbors(const Grid *grid, Point p, Point neighb[])
@@ -111,9 +112,13 @@ void bfs(Graph *graph, Node *s, Operation *op)
     const int di[] = { -1, 1, 0, 0};
     const int dj[] = {0, 0, -1, 1};
     std::queue<Node*> Q;
+    if (op != NULL)
+        op->count();
     Q.push(s);
     while (!Q.empty())
     {
+        if (op != NULL)
+            op->count();
         Node *u = Q.front();
         Q.pop();
         for (int k = 0; k < 4; k++)
@@ -121,14 +126,22 @@ void bfs(Graph *graph, Node *s, Operation *op)
             int x = di[k] + u->position.row;
             int y = dj[k] + u->position.col;
             for (int i = 0; i < graph->nrNodes; i++)
+            {
+                if (op != NULL)
+                    op->count();
                 if (graph->v[i]->color == COLOR_WHITE && graph->v[i]->position.row == x && graph->v[i]->position.col == y)
                 {
+                    if (op != NULL)
+                        op->count(3);
                     graph->v[i]->color = COLOR_GRAY;
                     graph->v[i]->dist = u->dist + 1;
                     graph->v[i]->parent = u;
                     Q.push(graph->v[i]);
                 }
+            }
         }
+        if (op != NULL)
+            op->count();
         u->color = COLOR_BLACK;
     }
 }
@@ -211,7 +224,7 @@ void preety_print(Point repr[], int p[], int n, int parinte, int spatii) {
     for (int i = 0; i < n; i++) {
         if (p[i] == parinte) {
             printf("%s(%d, %d)\n", s, repr[i].row, repr[i].col);
-            preety_print(repr, p, n, i, spatii + 6);
+            preety_print(repr, p, n, i, spatii + 8);
         }
     }
 }
@@ -225,17 +238,75 @@ int shortest_path(Graph *graph, Node *start, Node *end, Node *path[])
     // if end is not reachable from start, return -1
     // note: the size of the array path is guaranteed to be at least 1000
     bfs(graph, start);
-    if(end->color == COLOR_WHITE)
+    if (end->color == COLOR_WHITE)
         return -1;
     int n = 0;
     Node *e = end;
-    while(e != start){
+    while (e != start) {
         path[n++] = e;
         e = e->parent;
     }
+    for (int i = 0; i < n / 2; i++)
+        std::swap(path[i], path[n - i - 1]);
     return n;
 }
 
+NodeT *make_set(int key) {
+    NodeT *x = (NodeT*)malloc(sizeof(NodeT));
+    x->key = key;
+    x->parent = x;
+    x->rank = 0;
+    return x;
+}
+
+NodeT *find_set(NodeT *x) {
+    if (x != x->parent)
+        x->parent = find_set(x->parent);
+    return x->parent;
+}
+
+void link(NodeT **x, NodeT * (*y)) {
+    if ((*x)->rank > (*y)->rank)
+        (*y)->parent = (*x);
+
+    else {
+        (*x)->parent = (*y);
+        if ((*x)->rank == (*y)->rank)
+            (*y)->rank++;
+    }
+}
+
+void unionn(NodeT **x, NodeT **y) {
+    NodeT *set1 = find_set(*x);
+    NodeT *set2 = find_set(*y);
+    link(&set1, &set2);
+}
+
+void fa_graf_conex(Edge edges[], int n, int *m) {
+    NodeT *s[n];
+    bool a[n][n];
+    for (int i = 0; i < n; i++)
+        s[i] = make_set(i);
+    for (int i = 0; i < *m; i++)
+        if (find_set(s[edges[i].u]) != find_set(s[edges[i].v]))
+            unionn(&s[edges[i].u], &s[edges[i].v]);
+    std::set<int>S;
+    for (int i = 0; i < n; i++) {
+        S.insert(find_set(s[i])->key);
+    }
+    (*m) = (*m) + S.size() - 1;
+    for (int i = n; i < (*m); i++) {
+        int u = *S.begin();
+        S.erase(u);
+        int v = *S.begin();
+        unionn(&s[u], &s[v]);
+        edges[i].u = u;
+        edges[i].v = v;
+        S.clear();
+        for (int i = 0; i < n; i++)
+            S.insert(find_set(s[i])->key);
+    }
+}
 
 void performance()
 {

@@ -33,6 +33,17 @@ typedef struct _Node{
     struct _Node *parent;
 }Node;
 
+typedef struct _NodeT{
+    int key;
+    int rank;
+    struct _NodeT *parent;
+}NodeT;
+
+typedef struct{
+    int u;
+    int v;
+}Edge;
+
 typedef struct{
     int nrNodes;
     Node **v;
@@ -45,6 +56,11 @@ void bfs(Graph *graph, Node *s, Operation *op=NULL);
 void print_bfs_tree(Graph *graph);
 void preety_print(Point *repr, int *p, int n, int parinte, int spatii);
 int shortest_path(Graph *graph, Node *start, Node *end, Node *path[]);
+NodeT *make_set(int key);
+NodeT *find_set(NodeT **x);
+void link(NodeT **x, NodeT **y);
+void unnion(NodeT **x, NodeT **y);
+void fa_graf_conex(Edge *edges, int n, int *m);
 void performance();
 
 #endif
