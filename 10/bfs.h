@@ -43,6 +43,7 @@ void grid_to_graph(const Grid *grid, Graph *graph);
 void free_graph(Graph *graph);
 void bfs(Graph *graph, Node *s, Operation *op=NULL);
 void print_bfs_tree(Graph *graph);
+void preety_print(Point *repr, int *p, int n, int parinte, int spatii);
 int shortest_path(Graph *graph, Node *start, Node *end, Node *path[]);
 void performance();
 

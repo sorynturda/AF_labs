@@ -5,6 +5,10 @@
 
 int get_neighbors(const Grid *grid, Point p, Point neighb[])
 {
+    // TODO: fill the array neighb with the neighbors of the point p and return the number of neighbors
+    // the point p will have at most 4 neighbors (up, down, left, right)
+    // avoid the neighbors that are outside the grid limits or fall into a wall
+    // note: the size of the array neighb is guaranteed to be at least 4
     const int di[] = { -1, 1, 0, 0};
     const int dj[] = {0, 0, -1, 1};
     int count = 0;
@@ -98,6 +102,12 @@ void free_graph(Graph *graph)
 
 void bfs(Graph *graph, Node *s, Operation *op)
 {
+    // TOOD: implement the BFS algorithm on the graph, starting from the node s
+    // at the end of the algorithm, every node reachable from s should have the color BLACK
+    // for all the visited nodes, the minimum distance from s (dist) and the parent in the BFS tree should be set
+    // for counting the number of operations, the optional op parameter is received
+    // since op can be NULL (when we are calling the bfs for display purposes), you should check it before counting:
+    // if(op != NULL) op->count();
     const int di[] = { -1, 1, 0, 0};
     const int dj[] = {0, 0, -1, 1};
     std::queue<Node*> Q;
@@ -121,14 +131,6 @@ void bfs(Graph *graph, Node *s, Operation *op)
         }
         u->color = COLOR_BLACK;
     }
-
-
-    // TOOD: implement the BFS algorithm on the graph, starting from the node s
-    // at the end of the algorithm, every node reachable from s should have the color BLACK
-    // for all the visited nodes, the minimum distance from s (dist) and the parent in the BFS tree should be set
-    // for counting the number of operations, the optional op parameter is received
-    // since op can be NULL (when we are calling the bfs for display purposes), you should check it before counting:
-    // if(op != NULL) op->count();
 }
 
 void print_bfs_tree(Graph *graph)
@@ -189,6 +191,7 @@ void print_bfs_tree(Graph *graph)
         // the parrent array is p (p[k] is the parent for node k or -1 if k is the root)
         // when printing the node k, print repr[k] (it contains the row and column for that point)
         // you can adapt the code for transforming and printing multi-way trees from the previous labs
+        preety_print(repr, p, n, -1, 0);
     }
 
     if (p != NULL) {
@@ -201,6 +204,19 @@ void print_bfs_tree(Graph *graph)
     }
 }
 
+void preety_print(Point repr[], int p[], int n, int parinte, int spatii) {
+    char s[spatii + 1];
+    memset(s, ' ', spatii);
+    s[spatii] = '\0';
+    for (int i = 0; i < n; i++) {
+        if (p[i] == parinte) {
+            printf("%s(%d, %d)\n", s, repr[i].row, repr[i].col);
+            preety_print(repr, p, n, i, spatii + 6);
+        }
+    }
+}
+
+
 int shortest_path(Graph *graph, Node *start, Node *end, Node *path[])
 {
     // TODO: compute the shortest path between the nodes start and end in the given graph
@@ -208,7 +224,16 @@ int shortest_path(Graph *graph, Node *start, Node *end, Node *path[])
     // the number of nodes filled in the path array should be returned
     // if end is not reachable from start, return -1
     // note: the size of the array path is guaranteed to be at least 1000
-    return -1;
+    bfs(graph, start);
+    if(end->color == COLOR_WHITE)
+        return -1;
+    int n = 0;
+    Node *e = end;
+    while(e != start){
+        path[n++] = e;
+        e = e->parent;
+    }
+    return n;
 }
 
 
