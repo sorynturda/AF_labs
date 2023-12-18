@@ -40,11 +40,6 @@ typedef struct _NodeT{
 }NodeT;
 
 typedef struct{
-    int u;
-    int v;
-}Edge;
-
-typedef struct{
     int nrNodes;
     Node **v;
 }Graph;
@@ -60,7 +55,7 @@ NodeT *make_set(int key);
 NodeT *find_set(NodeT **x);
 void link(NodeT **x, NodeT **y);
 void unnion(NodeT **x, NodeT **y);
-void fa_graf_conex(Edge *edges, int n, int *m);
+void fa_graf_conex(Graph *graph, int m);
 void performance();
 
 #endif

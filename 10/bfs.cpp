@@ -109,8 +109,20 @@ void bfs(Graph *graph, Node *s, Operation *op)
     // for counting the number of operations, the optional op parameter is received
     // since op can be NULL (when we are calling the bfs for display purposes), you should check it before counting:
     // if(op != NULL) op->count();
-    const int di[] = { -1, 1, 0, 0};
-    const int dj[] = {0, 0, -1, 1};
+    for (int i = 0; i < graph->nrNodes; i++)
+        if (graph->v[i] != s)
+        {
+            if (op != NULL)
+                op->count(3);
+            graph->v[i]->color = COLOR_WHITE;
+            graph->v[i]->dist = 1e9;
+            graph->v[i]->parent = NULL;
+        }
+    if (op != NULL)
+        op->count(3);
+    s->color = COLOR_WHITE;
+    s->dist = 0;
+    s->parent = NULL;
     std::queue<Node*> Q;
     if (op != NULL)
         op->count();
@@ -121,23 +133,17 @@ void bfs(Graph *graph, Node *s, Operation *op)
             op->count();
         Node *u = Q.front();
         Q.pop();
-        for (int k = 0; k < 4; k++)
-        {
-            int x = di[k] + u->position.row;
-            int y = dj[k] + u->position.col;
-            for (int i = 0; i < graph->nrNodes; i++)
+        for (int i = 0; i < u->adjSize; i++) {
+            if (op != NULL)
+                op->count();
+            if (u->adj[i]->color == COLOR_WHITE)
             {
                 if (op != NULL)
-                    op->count();
-                if (graph->v[i]->color == COLOR_WHITE && graph->v[i]->position.row == x && graph->v[i]->position.col == y)
-                {
-                    if (op != NULL)
-                        op->count(3);
-                    graph->v[i]->color = COLOR_GRAY;
-                    graph->v[i]->dist = u->dist + 1;
-                    graph->v[i]->parent = u;
-                    Q.push(graph->v[i]);
-                }
+                    op->count(4);
+                u->adj[i]->color = COLOR_GRAY;
+                u->adj[i]->dist = u->dist + 1;
+                u->adj[i]->parent = u;
+                Q.push(u->adj[i]);
             }
         }
         if (op != NULL)
@@ -282,30 +288,42 @@ void unionn(NodeT **x, NodeT **y) {
     link(&set1, &set2);
 }
 
-void fa_graf_conex(Edge edges[], int n, int *m) {
-    NodeT *s[n];
-    bool a[n][n];
-    for (int i = 0; i < n; i++)
+void fa_graf_conex(Graph *graph, int n_edges) {
+    srand(time(NULL));
+    Point *edges = (Point*)malloc(n_edges * sizeof(Point));
+    bool a[graph->nrNodes][graph->nrNodes];
+    for (int i = 0; i < n_edges; i++) {
+        edges[i].row = rand() % graph->nrNodes;
+        edges[i].col = rand() % graph->nrNodes;
+        while (edges[i].row == edges[i].col)
+            edges[i].col = rand() % graph->nrNodes;
+        if (a[edges[i].row][edges[i].col] == true)
+            i--;
+        else
+            a[edges[i].row][edges[i].col] = true;
+    }
+    NodeT *s[graph->nrNodes];
+    for (int i = 0; i < graph->nrNodes; i++)
         s[i] = make_set(i);
-    for (int i = 0; i < *m; i++)
-        if (find_set(s[edges[i].u]) != find_set(s[edges[i].v]))
-            unionn(&s[edges[i].u], &s[edges[i].v]);
-    std::set<int>S;
-    for (int i = 0; i < n; i++) {
-        S.insert(find_set(s[i])->key);
-    }
-    (*m) = (*m) + S.size() - 1;
-    for (int i = n; i < (*m); i++) {
-        int u = *S.begin();
-        S.erase(u);
-        int v = *S.begin();
-        unionn(&s[u], &s[v]);
-        edges[i].u = u;
-        edges[i].v = v;
-        S.clear();
-        for (int i = 0; i < n; i++)
-            S.insert(find_set(s[i])->key);
-    }
+    for (int i = 0; i < n_edges; i++)
+        if (find_set(s[edges[i].row]) != find_set(s[edges[i].col]))
+            unionn(&s[edges[i].row], &s[edges[i].col]);
+    // std::set<int>S;
+    // for (int i = 0; i < graph->nrNodes; i++) {
+    //     S.insert(find_set(s[i])->key);
+    // }
+    // for (int i = n_edges - 10; i < n_edges + (int)S.size() - 1; i++) {
+    //     int u = *S.begin();
+    //     S.erase(u);
+    //     int v = *S.begin();
+    //     unionn(&s[u], &s[v]);
+    //     edges[i].row = u;
+    //     edges[i].col = v;
+    //     S.clear();
+    //     for (int i = 0; i < graph->nrNodes; i++)
+    //         S.insert(find_set(s[i])->key);
+    // }
+    
 }
 
 void performance()
@@ -326,7 +344,7 @@ void performance()
         }
         // TODO: generate n random edges
         // make sure the generated graph is connected
-
+        fa_graf_conex(&graph, n);
         bfs(&graph, graph.v[0], &op);
         free_graph(&graph);
     }
@@ -344,7 +362,7 @@ void performance()
         }
         // TODO: generate 4500 random edges
         // make sure the generated graph is connected
-
+        fa_graf_conex(&graph, 4500);
         bfs(&graph, graph.v[0], &op);
         free_graph(&graph);
     }

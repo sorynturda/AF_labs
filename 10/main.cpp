@@ -111,9 +111,9 @@ void displayGrid(const Grid *grid, int lastCommand)
 {
     int i, j;
 #ifdef _MSC_VER
-    system("cls");
-#else
     system("clear");
+#else
+    system("cls");
 #endif
     for(i=0; i<grid->rows; ++i){
         if(i == 0){
