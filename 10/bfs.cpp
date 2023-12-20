@@ -112,20 +112,16 @@ void bfs(Graph *graph, Node *s, Operation *op)
     for (int i = 0; i < graph->nrNodes; i++)
         if (graph->v[i] != s)
         {
-            if (op != NULL)
-                op->count(3);
             graph->v[i]->color = COLOR_WHITE;
             graph->v[i]->dist = 1e9;
             graph->v[i]->parent = NULL;
         }
     if (op != NULL)
-        op->count(3);
+        op->count(4);
     s->color = COLOR_WHITE;
     s->dist = 0;
     s->parent = NULL;
     std::queue<Node*> Q;
-    if (op != NULL)
-        op->count();
     Q.push(s);
     while (!Q.empty())
     {
@@ -139,7 +135,7 @@ void bfs(Graph *graph, Node *s, Operation *op)
             if (u->adj[i]->color == COLOR_WHITE)
             {
                 if (op != NULL)
-                    op->count(4);
+                    op->count(3);
                 u->adj[i]->color = COLOR_GRAY;
                 u->adj[i]->dist = u->dist + 1;
                 u->adj[i]->parent = u;
@@ -291,39 +287,64 @@ void unionn(NodeT **x, NodeT **y) {
 void fa_graf_conex(Graph *graph, int n_edges) {
     srand(time(NULL));
     Point *edges = (Point*)malloc(n_edges * sizeof(Point));
-    bool a[graph->nrNodes][graph->nrNodes];
-    for (int i = 0; i < n_edges; i++) {
-        edges[i].row = rand() % graph->nrNodes;
+    bool a[graph->nrNodes][graph->nrNodes] = {false};
+    for (int i = 0; i < graph->nrNodes; i++) {
+        edges[i].row = i;
         edges[i].col = rand() % graph->nrNodes;
-        while (edges[i].row == edges[i].col)
+        while (edges[i].row == edges[i].col && a[edges[i].col][edges[i].row] == true)
             edges[i].col = rand() % graph->nrNodes;
-        if (a[edges[i].row][edges[i].col] == true)
-            i--;
-        else
-            a[edges[i].row][edges[i].col] = true;
+        a[edges[i].row][edges[i].col] = true;
+        a[edges[i].col][edges[i].row] = true;
     }
+    int k;
+
     NodeT *s[graph->nrNodes];
     for (int i = 0; i < graph->nrNodes; i++)
         s[i] = make_set(i);
-    for (int i = 0; i < n_edges; i++)
+    for (int i = 0; i < graph->nrNodes; i++)
         if (find_set(s[edges[i].row]) != find_set(s[edges[i].col]))
             unionn(&s[edges[i].row], &s[edges[i].col]);
-    // std::set<int>S;
-    // for (int i = 0; i < graph->nrNodes; i++) {
-    //     S.insert(find_set(s[i])->key);
-    // }
-    // for (int i = n_edges - 10; i < n_edges + (int)S.size() - 1; i++) {
-    //     int u = *S.begin();
-    //     S.erase(u);
-    //     int v = *S.begin();
-    //     unionn(&s[u], &s[v]);
-    //     edges[i].row = u;
-    //     edges[i].col = v;
-    //     S.clear();
-    //     for (int i = 0; i < graph->nrNodes; i++)
-    //         S.insert(find_set(s[i])->key);
-    // }
-    
+
+    std::set<int>S;
+    for (int i = 0; i < graph->nrNodes; i++) {
+        S.insert(find_set(s[i])->key);
+    }
+    int connectedComponents = S.size();
+    for (int i = graph->nrNodes; i < graph->nrNodes + connectedComponents; i++) {
+        int u = *S.begin();
+        S.erase(u);
+        int v = *S.begin();
+        unionn(&s[u], &s[v]);
+        a[u][v] = a[v][u] = true;
+        S.clear();
+        for (int i = 0; i < graph->nrNodes; i++)
+            S.insert(find_set(s[i])->key);
+    }
+
+    for (int i = graph->nrNodes + connectedComponents; i < n_edges; i++) {
+        edges[i].row = rand() % graph->nrNodes;
+        edges[i].col = rand() % graph->nrNodes;
+        while (edges[i].row == edges[i].col && a[edges[i].col][edges[i].row] == true)
+            edges[i].col = rand() % graph->nrNodes;
+        a[edges[i].row][edges[i].col] = true;
+        a[edges[i].col][edges[i].row] = true;
+    }
+    for (int i = 0; i < graph->nrNodes; i++) {
+        k = 0;
+        for (int j = 0; j < graph->nrNodes; j++)
+            if (a[i][j])
+                k++;
+        graph->v[i]->adjSize = k;
+        graph->v[i]->adj = (Node**)malloc(k * sizeof(Node*));
+    }
+    for (int i = 0; i < graph->nrNodes; i++) {
+        k = 0;
+        for (int j = 0; j < graph->nrNodes; j++)
+            if (a[i][j])
+                graph->v[i]->adj[k++] = graph->v[j];
+    }
+    if (edges != NULL)
+        free(edges), edges = NULL;
 }
 
 void performance()
