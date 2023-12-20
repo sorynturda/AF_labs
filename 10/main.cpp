@@ -1,3 +1,7 @@
+/*
+ * Sorin Turda, grupa 30222
+ * Bfs are complexitate O(E + V), E numar de muchii, V numar de noduri
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
