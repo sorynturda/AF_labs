@@ -1,6 +1,7 @@
 #include <iostream>
 #include <time.h>
 #include <set>
+#include <stack>
 #include "../Profiler.h"
 
 #define MAX_SIZE 10000
@@ -45,6 +46,9 @@ typedef struct {
 } Graph;
 
 void dfs(Graph *graph, Node *s, Operation *op = NULL);
+
+std::stack<Node*> stiva;
+bool cycle = false;
 
 NodeT *make_set(int key) {
     NodeT *x = (NodeT*)malloc(sizeof(NodeT));
@@ -164,11 +168,13 @@ void dfs(Graph *graph, Node *s, Operation *op) {
     if (op != NULL)
         op->count(2);
     s->d = ++time;
-    std::cout << s->key << ' ';
+    // std::cout << s->key << ' ';
     s->color = COLOR_GRAY;
     for (int i = 0; i < s->adjSize; i++) {
         if (op != NULL)
             op->count();
+        if(s->adj[i]->d != 0 && s->adj[i]->f != 0 && s->adj[i]->color != COLOR_WHITE)
+            cycle = true;
         if (s->adj[i]->color == COLOR_WHITE) {
             if (op != NULL)
                 op->count();
@@ -179,6 +185,7 @@ void dfs(Graph *graph, Node *s, Operation *op) {
     if (op != NULL)
         op->count(2);
     s->f = ++time;
+    stiva.push(s);
     s->color = COLOR_BLACK;
 }
 
@@ -245,8 +252,15 @@ void demo() {
     for (int i = 0; i < graph.nrNodes; i++)
         if (graph.v[i]->color == COLOR_WHITE) {
             dfs(&graph, graph.v[i]);
-            std::cout << '\n';
+            // std::cout << '\n';
         }
+    if (!cycle)
+        while (!stiva.empty()) {
+            std::cout << stiva.top()->key << ' ';
+            stiva.pop();
+        }
+    else
+        std::cout<<"ciclu\n";
     free_graph(&graph);
 }
 
