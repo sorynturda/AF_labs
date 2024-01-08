@@ -102,10 +102,10 @@ void fa_graf_conex(Graph *graph, int n_edges) {
     for (int i = 0; i < graph->nrNodes; i++) {
         edges[i].row = i;
         edges[i].col = rand() % graph->nrNodes;
-        while (edges[i].row == edges[i].col && a[edges[i].col][edges[i].row] == true)
+        while (edges[i].row == edges[i].col && a[edges[i].row][edges[i].col] == true)
             edges[i].col = rand() % graph->nrNodes;
         a[edges[i].row][edges[i].col] = true;
-        a[edges[i].col][edges[i].row] = true;
+        // a[edges[i].col][edges[i].row] = true;
     }
     int k;
 
@@ -135,10 +135,10 @@ void fa_graf_conex(Graph *graph, int n_edges) {
     for (int i = graph->nrNodes + connectedComponents; i < n_edges; i++) {
         edges[i].row = rand() % graph->nrNodes;
         edges[i].col = rand() % graph->nrNodes;
-        while (edges[i].row == edges[i].col && a[edges[i].col][edges[i].row] == true)
+        while (edges[i].row == edges[i].col && a[edges[i].row][edges[i].col] == true)
             edges[i].col = rand() % graph->nrNodes;
         a[edges[i].row][edges[i].col] = true;
-        a[edges[i].col][edges[i].row] = true;
+        // a[edges[i].col][edges[i].row] = true;
     }
     for (int i = 0; i < graph->nrNodes; i++) {
         k = 0;
@@ -164,7 +164,7 @@ void dfs(Graph *graph, Node *s, Operation *op) {
     if (op != NULL)
         op->count(2);
     s->d = ++time;
-    // std::cout<<s->key<<' ';
+    std::cout << s->key << ' ';
     s->color = COLOR_GRAY;
     for (int i = 0; i < s->adjSize; i++) {
         if (op != NULL)
@@ -242,16 +242,20 @@ void demo() {
             std::cout << graph.v[i]->adj[j]->key << ' ';
         std::cout << '\n';
     }
-    dfs(&graph, graph.v[0]);
+    for (int i = 0; i < graph.nrNodes; i++)
+        if (graph.v[i]->color == COLOR_WHITE) {
+            dfs(&graph, graph.v[i]);
+            std::cout << '\n';
+        }
     free_graph(&graph);
 }
 
 int main() {
     srand(time(nullptr));
     clock_t begin = clock();
-    // demo();
-    performance();
+    demo();
+    // performance();
     clock_t end = clock();
-    printf("%lf\n", (double)(end - begin) / CLOCKS_PER_SEC);
+    printf("\n%lf\n", (double)(end - begin) / CLOCKS_PER_SEC);
     return 0;
 }
